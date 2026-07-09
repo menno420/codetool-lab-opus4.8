@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Reusable composite **GitHub Action** (`action.yml`) that installs and runs
+  mdverify, with `paths`, `args`, and `python-version` inputs.
+- **pre-commit hook** (`.pre-commit-hooks.yaml`, `id: mdverify`) that runs the
+  code blocks in changed Markdown files, for easy CI/pre-commit adoption.
+
 Roadmap / ideas under consideration:
 
 - **Session state-sharing** between blocks in a file (opt-in), so a later block
