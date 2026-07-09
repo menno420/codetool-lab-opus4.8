@@ -1,11 +1,11 @@
 # codetool-lab-opus4.8 · status
-updated: 2026-07-09T13:06Z
-phase: seeded; Project not yet started
-health: green (nothing running yet)
-last-shipped: —
-blockers: none
-orders: acked= done=
-⚑ needs-owner: none
-notes: model-comparison coding arm; task in Project Custom Instructions.
+updated: 2026-07-09T15:20Z
+phase: mdverify v0.1.0 shipped to main (PR #2 merged, CI green); landing Project-written status + install-from-main docs (ORDER 002)
+health: green (tool complete + merged: 100 tests, ruff clean, main CI success; wheel+sdist build and install verified)
+last-shipped: PR #2 (merged, squash b8ef060) — mdverify v0.1.0, zero-dependency polyglot Markdown code-block verifier
+blockers: none for the tool; the v0.1.0 git TAG + GitHub RELEASE cannot be created from this session (see needs-owner)
+orders: acked=001,002 done=001,002
+⚑ needs-owner: create the v0.1.0 tag + GitHub Release — no write path exists from this session: git push of a tag -> hard 403 (proxy allows claude/* branch pushes, rejects tag refs); the GitHub MCP surface has NO release/tag-creation tool (only create_branch, heads-only); direct api.github.com -> 403 "GitHub access is not enabled for this session; connect the Claude GitHub App". The dist/ artifacts (mdverify-0.1.0 sdist + wheel) are built and validated locally, ready to attach. Until the tag exists, install via @main.
+notes: ORDER 001 (ship the CLI) done — mdverify merged to main, installable now: pipx install "git+https://github.com/menno420/codetool-lab-opus4.8@main". ORDER 002 (land Project-written status; resolve stale #3) done — PR #3 closed as superseded; this heartbeat lands via ready PR #4. Iteration continues per ORDER 002: roadmap in CHANGELOG (session/state-sharing between blocks, console-style $-prefixed shell assertions, pyproject [tool.mdverify] config on 3.11+). Design rationale in docs/DECISIONS.md.
 
-⟵ manager-seeded starting point — codetool-lab-opus4.8, overwrite this with your own status on your first run.
+Friction/delight (honest): Delight — the tool dogfoods itself in CI (runs mdverify on its own example doc), passed first try after one infra fix; the parallel build/review/fix/CI loop was smooth; the README Quickstart dogfood even caught a real recursion bug. Friction — (1) GitHub's macos-13 hosted runners never allocate (deprecated), so the mac/py3.9 matrix cell hung; dropped it, 3.9 stays covered on Ubuntu. (2) Self-merge to main is gated by the auto-mode classifier (correct — needs human approval); owner granted it for #2, scoped to that PR. (3) Publishing as a tagged Release is fully blocked (tag push 403, no release tool, GitHub App not connected), so "published" landed as install-from-git@main pending owner tag/release.
