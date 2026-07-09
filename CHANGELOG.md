@@ -25,11 +25,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   illustrative and skipped, so existing snippets never execute. Commands run in
   independent subprocesses (state is not shared). Adds `console_languages` and
   `console_shell` config keys (JSON and `pyproject.toml`).
-
-Roadmap / ideas under consideration:
-
-- **Session state-sharing** between blocks in a file (opt-in), so a later block
-  can build on variables defined earlier.
+- **Session state-sharing** between blocks via a `session=NAME` directive. Blocks
+  in one file that share a session name are concatenated in document order and
+  run **once** as a single script, so later blocks see earlier blocks' variables,
+  imports, and shell state; the session passes iff the combined run exits `0` and
+  is reported as one result anchored at the first member (with the session name
+  and member count). All members must be one language (mixing is a clear error);
+  `skip` excludes a member (all-skipped → skipped); output assertions and
+  `expect-error` do not combine with sessions in v1. Blocks without `session=`
+  are unchanged. `--list` shows each session as a grouped unit.
 
 ## [0.1.0] - 2026-07-09
 

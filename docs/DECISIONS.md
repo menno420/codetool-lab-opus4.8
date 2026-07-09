@@ -114,7 +114,42 @@ considered**.
   renderers highlight); sharing a shell process across commands in a block
   (deferred to the session-sharing feature — see decision #4).
 
-## 8. CI matrix: 2 OS × 3 Python versions
+## 8. Session state-sharing: concatenate and run once
+
+- **Decision:** Blocks that share a `session=NAME` directive (per file) are
+  collected in document order, their bodies **concatenated into one script**,
+  and executed **once** through the language's normal runner (the same temp-file
+  mechanism as a single block). The session passes iff the combined run exits
+  `0`. It is reported as a single result anchored at the first member, labelled
+  with the session name and member count. This relaxes decision #4 (independent
+  blocks) only for explicitly opted-in blocks; everything else is unchanged.
+- **Why:** Concatenation is the simplest model that actually shares state and is
+  **language-agnostic** — it works for Python, bash, node, or any configured
+  runner without a per-language integration, because "share state" reduces to
+  "put the snippets in one file and run it." It is **deterministic** (no
+  background process, no prompt detection, no serialised namespace) and reuses
+  the existing runner path almost verbatim. Running the whole session under the
+  global timeout keeps resource behaviour predictable.
+- **v1 limitations (deliberate):** one language per session (mixing languages is
+  a clear error, not a crash, since a single script has a single interpreter);
+  output-block assertions and `expect-error` do **not** apply to session members
+  (a session asserts exit-0 of the combined run only — a paired `output` block
+  after a session member is ignored); `skip` on a member excludes it from the
+  concatenation, and an all-skipped session is reported skipped. `session=` on a
+  console-session language has no code runner, so such a session is skipped
+  rather than run as `$`-prefixed assertions — sharing a live shell across a
+  console block's `$` commands remains out of scope.
+- **Alternatives considered:** a **persistent REPL / interpreter process** per
+  language (true incremental evaluation, but language-specific, needs reliable
+  prompt/readiness detection and output demarcation per language, and is easy to
+  get subtly wrong — rejected as complex and non-portable); a **serialised
+  namespace** passed between processes (Python-only, doesn't generalise to bash
+  or node — rejected); per-member results instead of one (scrambles which block
+  "owns" a failure when state is genuinely shared — the concatenated run has one
+  outcome, so one result anchored at the first member is the honest
+  representation).
+
+## 9. CI matrix: 2 OS × 3 Python versions
 
 - **Decision:** Test on `ubuntu-latest` and `macos-latest` across Python 3.9,
   3.11, and 3.13.
@@ -133,7 +168,7 @@ considered**.
   assume a POSIX shell, so it would need conditional test skips — deferred);
   testing every minor version (slower for little added signal).
 
-## 9. Publishing via GitHub Release + git install
+## 10. Publishing via GitHub Release + git install
 
 - **Decision:** Distribute from the Git repository (`pip`/`pipx install
   "git+https://…@v0.1.0"`) rather than PyPI for v0.1.0.

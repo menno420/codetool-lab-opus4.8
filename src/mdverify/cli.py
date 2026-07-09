@@ -14,7 +14,7 @@ from .config import load_config
 from .errors import ConfigError, UsageError
 from .parser import parse_blocks
 from .report import report, should_color, summarize
-from .runner import run_file
+from .runner import group_sessions, run_file
 
 MD_EXTENSIONS = {".md", ".markdown"}
 DEFAULT_IGNORE_DIRS = {
@@ -138,7 +138,24 @@ def _run_list(files: list[Path], stream) -> int:
     total = 0
     for path in files:
         blocks = parse_blocks(path.read_text(encoding="utf-8"), source_file=str(path))
+        sessions = group_sessions(blocks)
+        emitted: set[str] = set()
         for block in blocks:
+            name = block.session
+            if name is not None:
+                if name in emitted:
+                    continue
+                emitted.add(name)
+                members = sessions[name]
+                anchor = members[0]
+                total += 1
+                noun = "block" if len(members) == 1 else "blocks"
+                line_nums = ", ".join(str(m.line) for m in members)
+                stream.write(
+                    f"{anchor.location}  {anchor.language or '-'}  "
+                    f"[session: {name}, {len(members)} {noun}: lines {line_nums}]\n"
+                )
+                continue
             total += 1
             directives = sorted(k for k, v in block.attrs.items() if v is True)
             suffix = f"  [{', '.join(directives)}]" if directives else ""
