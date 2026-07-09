@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mdverify"
+version = "0.1.0"
+description = "A zero-dependency, polyglot Markdown code-block verifier that catches doc rot in CI."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Menno van Hattum" }]
+keywords = [
+    "markdown",
+    "documentation",
+    "testing",
+    "ci",
+    "doctest",
+    "code-blocks",
+    "doc-rot",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Documentation",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Homepage = "https://github.com/menno420/codetool-lab-opus4.8"
+Repository = "https://github.com/menno420/codetool-lab-opus4.8"
+Changelog = "https://github.com/menno420/codetool-lab-opus4.8/blob/main/CHANGELOG.md"
+
+[project.scripts]
+mdverify = "mdverify.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff>=0.4,<0.13"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mdverify"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
