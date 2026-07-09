@@ -34,13 +34,12 @@ transcripts), with **zero runtime dependencies** — pure standard library.
 this repository with [pipx](https://pipx.pypa.io) (recommended — isolated) or pip:
 
 ```console
-$ pipx install "git+https://github.com/menno420/codetool-lab-opus4.8@main"
+$ pipx install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.1.0"
 # or
-$ pip install "git+https://github.com/menno420/codetool-lab-opus4.8@main"
+$ pip install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.1.0"
 ```
 
-Once a `v0.1.0` tag / GitHub Release is published you can pin to it by swapping `@main` for
-`@v0.1.0`.
+To track the latest development version instead, swap `@v0.1.0` for `@main`.
 
 From source (for development):
 
@@ -209,7 +208,7 @@ Add a step to your workflow so broken examples fail the build:
 ```yaml
 - name: Verify documentation
   run: |
-    pip install "git+https://github.com/menno420/codetool-lab-opus4.8@main"
+    pip install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.1.0"
     mdverify README.md docs/
 ```
 
@@ -224,7 +223,7 @@ at the repo and pass the paths you want checked:
 
 ```yaml
 # .github/workflows/docs.yml
-- uses: menno420/codetool-lab-opus4.8@main   # pin @v0.1.0 once tagged
+- uses: menno420/codetool-lab-opus4.8@v0.1.0   # or @main for latest
   with:
     paths: "README.md docs/"
 ```
