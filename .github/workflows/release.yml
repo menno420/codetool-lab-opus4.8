@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to release (vX.Y.Z)"
+        required: true
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: release (${{ inputs.version }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! printf '%s\n' "$VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::version '$VERSION' does not match vX.Y.Z"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$VERSION" >/dev/null 2>&1; then
+            echo "::error::tag '$VERSION' already exists"
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install -U pip build
+          python -m build
+
+      - name: Extract release notes from CHANGELOG
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          awk -v ver="${VERSION#v}" '
+            $0 ~ "^## \\[" ver "\\]" { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          if [ -s "$RUNNER_TEMP/notes.md" ]; then
+            echo "Release notes extracted from CHANGELOG.md:"
+            cat "$RUNNER_TEMP/notes.md"
+          else
+            echo "No CHANGELOG section for ${VERSION#v}; will fall back to --generate-notes"
+          fi
+
+      - name: Create tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "mdverify $VERSION" "$GITHUB_SHA"
+          git push origin "refs/tags/$VERSION"
+          if [ -s "$RUNNER_TEMP/notes.md" ]; then
+            gh release create "$VERSION" dist/* --target "$GITHUB_SHA" \
+              --title "mdverify $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+          else
+            gh release create "$VERSION" dist/* --target "$GITHUB_SHA" \
+              --title "mdverify $VERSION" --generate-notes
+          fi
