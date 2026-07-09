@@ -77,5 +77,23 @@ is simply skipped, so ordinary snippets never break the build.
 This is just illustrative text, not executed.
 ```
 
+## 7. Console-session shell assertions
+
+A block in a shell-session language (`console`, `shell-session`, ...) is
+illustrative by default -- a plain ` ```console ` block is skipped, so install
+snippets never run. Add the `run` directive to execute it as `$`-prefixed shell
+assertions: each `$ ` line is a command and the lines after it are its expected
+stdout.
+
+```console {run}
+$ echo mdverify
+mdverify
+$ echo one two three
+one two three
+```
+
+Each command runs in its own subprocess (state is not shared between commands),
+so chain with `&&` when a later command depends on an earlier one.
+
 That's the whole tool: write docs, tag the tricky blocks, and let CI keep them
 honest.

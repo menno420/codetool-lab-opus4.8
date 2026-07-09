@@ -25,6 +25,15 @@ CONFIG_FILENAME = ".mdverify.json"
 PYPROJECT_FILENAME = "pyproject.toml"
 DEFAULT_TIMEOUT = 30.0
 
+# Fence languages that denote an interactive shell-session transcript. Such a
+# block is illustrative (skipped) by default; it is only executed as
+# ``$``-prefixed assertions when it also carries a ``run`` directive.
+DEFAULT_CONSOLE_LANGUAGES = {"console", "shell-session", "shellsession", "sh-session"}
+
+# Argv prefix used to execute each console command: the command text is appended
+# as the final argument, so ``["bash", "-c"]`` runs ``bash -c "<command>"``.
+DEFAULT_CONSOLE_SHELL = ["bash", "-c"]
+
 
 @dataclass
 class Runner:
@@ -58,6 +67,8 @@ class Config:
     output_languages: set[str] = field(default_factory=lambda: {"output"})
     timeout: float = DEFAULT_TIMEOUT
     ignore: list[str] = field(default_factory=list)
+    console_languages: set[str] = field(default_factory=lambda: set(DEFAULT_CONSOLE_LANGUAGES))
+    console_shell: list[str] = field(default_factory=lambda: list(DEFAULT_CONSOLE_SHELL))
 
     def resolve(self, language: str) -> Runner | None:
         """Return the runner for ``language`` (by name or alias) or ``None``."""
@@ -187,6 +198,18 @@ def _apply(config: Config, data: dict, path: Path) -> None:
         if not isinstance(ignore, list) or not all(isinstance(x, str) for x in ignore):
             raise ConfigError(f"'ignore' in {path} must be a list of strings")
         config.ignore = list(ignore)
+
+    if "console_languages" in data:
+        langs = data["console_languages"]
+        if not isinstance(langs, list) or not all(isinstance(x, str) for x in langs):
+            raise ConfigError(f"'console_languages' in {path} must be a list of strings")
+        config.console_languages = {x.lower() for x in langs}
+
+    if "console_shell" in data:
+        shell = data["console_shell"]
+        if not isinstance(shell, list) or not shell or not all(isinstance(x, str) for x in shell):
+            raise ConfigError(f"'console_shell' in {path} must be a non-empty list of strings")
+        config.console_shell = list(shell)
 
 
 def load_config(config_path: str | None = None, start_dir: str | None = None) -> Config:

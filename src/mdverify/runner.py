@@ -13,6 +13,7 @@ from pathlib import Path
 
 from .block import CodeBlock, pair_outputs
 from .config import Config, Runner
+from .console import ConsoleCommand, ConsoleParseError, parse_console_session
 from .parser import parse_blocks
 
 
@@ -201,6 +202,93 @@ def run_block(
     return _evaluate(block, proc.returncode, proc.stdout, proc.stderr, duration, expected)
 
 
+def run_console_block(
+    block: CodeBlock,
+    shell: list[str],
+    timeout: float,
+) -> BlockResult:
+    """Execute a console-session block as ``$``-prefixed shell assertions.
+
+    Each command runs in its own subprocess via ``shell`` (default
+    ``["bash", "-c"]``); state is **not** shared across commands. The block
+    passes only when every command exits ``0`` and its stdout matches the
+    expected transcript lines. The first failing command decides the result.
+    """
+    try:
+        commands = parse_console_session(block.content)
+    except ConsoleParseError as exc:
+        return BlockResult(block, Status.FAILED, str(exc))
+
+    start = time.monotonic()
+    for command in commands:
+        result = _run_console_command(block, command, shell, timeout, start)
+        if result is not None:
+            return result
+
+    duration = time.monotonic() - start
+    reason = "ok" if commands else "no commands to run"
+    return BlockResult(block, Status.PASSED, reason, exit_code=0, duration=duration)
+
+
+def _run_console_command(
+    block: CodeBlock,
+    command: ConsoleCommand,
+    shell: list[str],
+    timeout: float,
+    start: float,
+) -> BlockResult | None:
+    """Run one console command; return a failing/error result or ``None`` on pass."""
+    try:
+        proc = subprocess.run(
+            [*shell, command.command],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except FileNotFoundError:
+        return BlockResult(
+            block,
+            Status.ERROR,
+            f"console shell not found: '{shell[0]}' is not installed or not on PATH",
+            duration=time.monotonic() - start,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return BlockResult(
+            block,
+            Status.FAILED,
+            f"command timed out after {timeout:g}s: {command.label}",
+            stdout=exc.stdout or "",
+            stderr=exc.stderr or "",
+            duration=time.monotonic() - start,
+        )
+
+    duration = time.monotonic() - start
+    if proc.returncode != 0:
+        return BlockResult(
+            block,
+            Status.FAILED,
+            f"command exited with code {proc.returncode}: {command.label}",
+            exit_code=proc.returncode,
+            stdout=proc.stdout,
+            stderr=proc.stderr,
+            duration=duration,
+        )
+
+    if _normalize_output(proc.stdout) != _normalize_output(command.expected):
+        return BlockResult(
+            block,
+            Status.FAILED,
+            f"command output did not match expected: {command.label}",
+            exit_code=proc.returncode,
+            stdout=proc.stdout,
+            stderr=proc.stderr,
+            duration=duration,
+            diff=_make_diff(command.expected, proc.stdout),
+        )
+
+    return None
+
+
 def _classify(
     block: CodeBlock,
     config: Config,
@@ -209,6 +297,10 @@ def _classify(
 ) -> BlockResult:
     if block.is_skipped:
         return BlockResult(block, Status.SKIPPED, "skipped by directive")
+
+    if block.language in config.console_languages and block.run:
+        timeout = block.timeout_override if block.timeout_override is not None else config.timeout
+        return run_console_block(block, config.console_shell, timeout)
 
     runner = config.resolve(block.language)
     if runner is None:

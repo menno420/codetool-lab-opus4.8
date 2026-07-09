@@ -18,6 +18,9 @@ from dataclasses import dataclass, field
 # Flags that mean "do not run this block", normalised to the canonical "skip".
 _SKIP_ALIASES = {"skip", "mdverify-skip", "no-run", "norun"}
 
+# Flags that opt a console-session block into execution, normalised to "run".
+_RUN_ALIASES = {"run", "exec"}
+
 
 @dataclass
 class CodeBlock:
@@ -51,6 +54,15 @@ class CodeBlock:
     def expect_error(self) -> bool:
         """True when the block is expected to exit non-zero."""
         return bool(self.attrs.get("expect-error"))
+
+    @property
+    def run(self) -> bool:
+        """True when a ``run`` / ``exec`` directive opts the block into execution.
+
+        Only meaningful for console-session languages; on any other language the
+        directive is recognised (so it never crashes the parser) but ignored.
+        """
+        return bool(self.attrs.get("run"))
 
     @property
     def timeout_override(self) -> float | None:
@@ -94,6 +106,8 @@ def _parse_token(token: str, attrs: dict) -> None:
     flag = token.lower()
     if flag in _SKIP_ALIASES:
         attrs["skip"] = True
+    elif flag in _RUN_ALIASES:
+        attrs["run"] = True
     else:
         # Unknown flag: store it truthy so callers may inspect, but never crash.
         attrs[flag] = True
