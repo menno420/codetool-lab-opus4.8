@@ -30,39 +30,40 @@ transcripts), with **zero runtime dependencies** — pure standard library.
 
 ## Install
 
-`mdverify` is distributed from its Git repository.
+`mdverify` is a single, zero-dependency Python package (3.9+). Install it straight from
+this repository with [pipx](https://pipx.pypa.io) (recommended — isolated) or pip:
 
-```bash
-# recommended: isolated install with pipx
-pipx install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.1.0"
-
-# or with pip
-pip install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.1.0"
+```console
+$ pipx install "git+https://github.com/menno420/codetool-lab-opus4.8@main"
+# or
+$ pip install "git+https://github.com/menno420/codetool-lab-opus4.8@main"
 ```
 
-From source, for development:
+Once a `v0.1.0` tag / GitHub Release is published you can pin to it by swapping `@main` for
+`@v0.1.0`.
 
-```bash
-git clone https://github.com/menno420/codetool-lab-opus4.8
-cd codetool-lab-opus4.8
-pip install -e ".[dev]"
+From source (for development):
+
+```console
+$ git clone https://github.com/menno420/codetool-lab-opus4.8
+$ cd codetool-lab-opus4.8
+$ pip install -e ".[dev]"
 ```
 
-Requires **Python 3.9+**. The tool itself needs nothing but the standard
-library; a block's language interpreter (e.g. `node`) only needs to be installed
-if you actually verify blocks in that language.
+> The tool is named **`mdverify`**; the repository (`codetool-lab-opus4.8`) is a throwaway
+> capability-evaluation repo, which is why the two names differ.
 
 ## Quickstart
 
-```bash
+```console
 # check a single file
-mdverify README.md
+$ mdverify README.md
 
 # check a whole directory tree (all *.md / *.markdown)
-mdverify docs/
+$ mdverify docs/
 
 # check the current directory (the default)
-mdverify
+$ mdverify
 ```
 
 Example output:
@@ -208,7 +209,7 @@ Add a step to your workflow so broken examples fail the build:
 ```yaml
 - name: Verify documentation
   run: |
-    pip install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.1.0"
+    pip install "git+https://github.com/menno420/codetool-lab-opus4.8@main"
     mdverify README.md docs/
 ```
 
