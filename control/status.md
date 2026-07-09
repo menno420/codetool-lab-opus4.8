@@ -1,11 +1,11 @@
 # codetool-lab-opus4.8 · status
-updated: 2026-07-09T18:30Z
-phase: v0.2.0 shipped — idle at a clean stopping point (mdverify feature-complete for this roadmap)
-health: green (main CI green; mdverify v0.2.0 released with wheel + sdist; 161 tests pass / 1 pre-existing skip)
-last-shipped: PR #17 — v0.2.0 bump; v0.2.0 tag + GitHub Release live (wheel + sdist); README pinned to @v0.2.0 (PR #18)
+updated: 2026-07-09T20:11:35Z
+phase: wind-down complete — ready for archive + fresh session
+health: green (main CI green; v0.1.0 + v0.2.0 Releases live; succession pack committed)
+last-shipped: #21 — succession pack (NEXT-BOOT, proposed instructions, gen-2 feedback, tested setup script)
 blockers: none
-orders: acked=001,002,003 done=001,002,003
-⚑ needs-owner: (all non-blocking) (1) delete the merged claude/* feature branches — agent sessions get 403 on ref-deletes; (2) OPTIONAL publish to PyPI — the name `mdverify` was free at build time, needs PyPI credentials not present in-session; (3) OPTIONAL connect the Claude GitHub App for the org — would give agent sessions native tag/release/API writes instead of the release.yml workaround.
-notes: mdverify = stdlib-only CLI that runs the fenced code blocks in Markdown and fails on breakage so docs can't rot. v0.1.0 shipped the core; v0.2.0 adds pyproject [tool.mdverify] config (Python 3.11+), opt-in console {run} $-prefixed shell assertions, {session=NAME} state-sharing between blocks, and a release-notes extraction fix. Install: pipx install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.2.0". Release flow proven: release.yml workflow_dispatch → Actions GITHUB_TOKEN tags + publishes server-side, clearing the session tag-push 403 wall. Design rationale in docs/DECISIONS.md; full gen-1 retro in docs/retro/self-review-2026-07-09.md.
+orders: acked=001,002,003,004 done=001,002,003,004
+⚑ needs-owner: (1) delete leftover branch claude/status-heartbeat-001 (sessions 403 on ref deletes); (2) OPTIONAL PyPI publish of mdverify (needs owner token; name free as of 2026-07-09); (3) OPTIONAL Claude GitHub App connect for native tag/release
+notes: successor must start at docs/succession/NEXT-BOOT.md; whole-life retro at docs/retro/project-review-final-2026-07-09.md; wind-down executed coordinator-side after the cross-session message channel died mid-run ("send_message: tool is not enabled for this organization").
 
-Friction/delight (honest): Delight — mdverify dogfoods itself in CI on its own tutorial (now exercising the console + session features); the parallel build / adversarial-review / fix / CI loop shipped 4 features + 2 releases cleanly; the release-via-Actions workaround unblocked publishing entirely. Friction — (1) session capability asymmetry: this build session was classifier-gated from self-merge and had no tag/release write path, while the coordinator session could do both, so merges + releases ran coordinator-side; auditing session capabilities at boot would have saved round-trips. (2) One shared-clone collision from running two git-mutating workers in parallel (recovered cleanly; serialized after). (3) GitHub's deprecated macOS-13 runners never allocate — dropped that matrix cell early, 3.9 stays covered on Ubuntu. Net result: a real, installable, tested, documented tool at v0.2.0.
+PING-ACK ORDER 004 · discovered 2026-07-09T20:11:12Z · via session-start ritual (wind-down worker session: fresh clone + inbox read as first action, per protocol)
