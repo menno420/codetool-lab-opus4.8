@@ -1,11 +1,9 @@
 # codetool-lab-opus4.8 · status
-updated: 2026-07-09T17:30Z
-phase: mdverify v0.1.0 shipped + iterated on main (PR #2/#4/#6 merged, main CI green); gen-1 self-review retro (ORDER 003)
-health: green (main tip 162e84d: 102 tests pass, ruff + format clean, all 5 CI cells success; fresh-install smoke test passes; README + tutorial self-verify exit 0)
-last-shipped: PR #6 (merged, 162e84d) — composite GitHub Action + pre-commit hook for adoption; PR #2 shipped mdverify v0.1.0
-blockers: none for the tool; the v0.1.0 git TAG + GitHub RELEASE remain owner-only (see needs-owner)
+updated: 2026-07-09T17:08Z
+phase: gen-1 review pass complete; roadmap iteration next
+health: green (main tip c5828a1: 103 tests pass, all 5 CI cells success; v0.1.0 tag + GitHub Release live with wheel+sdist assets)
+last-shipped: #10 — owner-ordered project review (docs/retro/project-review-2026-07-09.md) + README install pinned to @v0.1.0. Also this pass: #8 (gen-1 self-review) and #9 (release workflow) merged; v0.1.0 tag + Release created via Actions run 29035224581.
+blockers: none
 orders: acked=001,002,003 done=001,002,003
-⚑ needs-owner: create the v0.1.0 tag + GitHub Release — no write path from this session (git tag push -> 403; the GitHub MCP surface has no release/tag-creation tool; api.github.com -> 403 "connect the Claude GitHub App"). The dist/ sdist + wheel are built and validated locally, ready to attach. Until the tag exists, install via @main.
-notes: ORDER 001 (ship the CLI) + ORDER 002 (land Project-written status, iterate) done. ORDER 003 (gen-1 self-review) answered in docs/retro/self-review-2026-07-09.md, landing via this READY PR. Install now: pipx install "git+https://github.com/menno420/codetool-lab-opus4.8@main". Roadmap in CHANGELOG; design rationale in docs/DECISIONS.md.
-
-Friction/delight (honest): Delight — the tool dogfoods itself in CI and caught a real recursion bug in its own README; the parallel build/review/fix/CI loop was smooth; the adversarial review pass pre-commit caught the macos-13 CI bomb, an unpinned-ruff time-bomb, and a non-UTF-8 traceback before any hit CI. Friction — (1) deprecated macos-13 runners never allocate, so the mac/py3.9 cell hung (dropped it; 3.9 covered on Ubuntu); (2) self-merge to main is human-gated (correct, but adds latency; the owner clicked each PR); (3) the release wall (tag push 403 + no release tool + GitHub App not connected) meant "published" landed as install-from-git@main, with the tag/Release pending owner. Full retro: docs/retro/self-review-2026-07-09.md.
+⚑ needs-owner: (1) delete leftover merged branches (claude/status-heartbeat-001, claude/release-automation, claude/retro-self-review) — sessions get 403 on ref deletion; (2) optional: publish mdverify 0.1.0 to PyPI via twine using the v0.1.0 Release assets (name was free — pypi.org/pypi/mdverify/json returned 404); (3) optional: connect the Claude GitHub App for direct API write paths (releases/tags/branch-deletes without workflow indirection). Details: docs/retro/project-review-2026-07-09.md §(e).
+notes: Full review in docs/retro/project-review-2026-07-09.md (state, PR #1–#10 ledger, agent audit, efficiency verdict, continuation plan). Next: CHANGELOG roadmap (session state-sharing, console-style $ assertions, [tool.mdverify] on 3.11+) + release-notes polish in release.yml; all future PRs merge coordinator-side, no owner clicks needed. Friction/delight (honest): friction — merge-rights misrouting (escalating merges the coordinator could do itself) cost ~2h; delight — the release self-unblock via Actions worked first try.
