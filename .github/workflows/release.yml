@@ -46,11 +46,29 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          awk -v ver="${VERSION#v}" '
-            $0 ~ "^## \\[" ver "\\]" { found = 1; next }
-            found && /^## / { exit }
-            found { print }
-          ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          python3 - <<'PY' > "$RUNNER_TEMP/notes.md"
+          import os, re
+          ver = os.environ["VERSION"].lstrip("v")
+          lines = open("CHANGELOG.md", encoding="utf-8").read().splitlines()
+          out, found = [], False
+          for line in lines:
+              if re.match(r"^## \[" + re.escape(ver) + r"\]", line):
+                  found = True
+                  continue
+              if found and line.startswith("## "):
+                  break
+              if found:
+                  out.append(line)
+          # Drop trailing Keep-a-Changelog link-reference definitions
+          # (e.g. "[0.1.0]: https://...") and any trailing blank lines: the last
+          # version section runs to EOF, so these footer links would otherwise
+          # render as junk at the bottom of the GitHub Release notes.
+          linkdef = re.compile(r"^\s*\[[^]]+\]:\s*https?://")
+          while out and (not out[-1].strip() or linkdef.match(out[-1])):
+              out.pop()
+          if out:
+              print("\n".join(out))
+          PY
           if [ -s "$RUNNER_TEMP/notes.md" ]; then
             echo "Release notes extracted from CHANGELOG.md:"
             cat "$RUNNER_TEMP/notes.md"
