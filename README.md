@@ -88,6 +88,7 @@ brace-wrapped forms work:
 | `skip` / `no-run`   | Record the block but never execute it (reported as `SKIP`).         |
 | `expect-error`      | The block **must** exit non-zero; it passes on failure, fails on 0. |
 | `timeout=<seconds>` | Override the per-block timeout.                                      |
+| `session=<name>`    | Share state with other blocks of the same name: they run as one concatenated script (see below). |
 | `run` / `exec`      | **Console-session blocks only:** execute the `$`-prefixed transcript (see below). Ignored on other languages. |
 
 A block marked `expect-error` is judged purely on its (non-zero) exit code: any
@@ -164,9 +165,54 @@ Inside a `run` console block:
   The block passes only when **every** command passes.
 
 Each command runs in its **own** subprocess, so state is **not** shared between
-commands within a block — chain dependent steps with `&&`, or wait for the
-forthcoming session-sharing feature. The `run` directive is meaningful only for
-console-session languages; on any other language it is recognised but ignored.
+commands within a block — chain dependent steps with `&&`. (To share state
+across *blocks*, use `session=` — see below; a console-session language is not a
+code runner, so `session=` on a `console` block has no runner and is skipped.)
+The `run` directive is meaningful only for console-session languages; on any
+other language it is recognised but ignored.
+
+### Sharing state across blocks (sessions)
+
+By default every runnable block executes in its own fresh process, so a block
+can't see variables an earlier block defined. When a tutorial *builds up* state
+step by step, tag the related blocks with the same `session=NAME` directive:
+
+    ```python {session=setup}
+    answer = 41
+    ```
+
+    ```python {session=setup}
+    answer += 1
+    assert answer == 42
+    print(answer)
+    ```
+
+All blocks that share a session name (within one file) are **concatenated in
+document order and run once**, as a single script, so later members see earlier
+members' variables, imports, and shell state (a `cd` or `export` in an earlier
+bash block persists into a later one). The result is reported as a single entry
+anchored at the first member:
+
+```text
+  PASS  guide.md:5  python  (session: setup, 2 blocks)
+```
+
+Rules and v1 limits:
+
+- **One language per session.** Every member must share one language; mixing
+  them (e.g. a `python` and a `bash` block in the same session) is a clear error
+  (`session 'setup' mixes languages (python, bash)`), not a crash.
+- **Exit code only.** A session passes when the combined run exits `0`. Output
+  (` ```output `) assertions and `expect-error` are **not** applied to session
+  members in v1 — a paired `output` block following a session member is ignored.
+- **`skip` excludes a member** from the concatenation (the rest of the session
+  still runs); if every member is skipped the session is reported `SKIP`.
+- Session names are **per file** — the same name in two files is two independent
+  sessions.
+- Blocks **without** `session=` are unchanged: they still run independently.
+
+Sessions are one temp-file run per language (the same mechanism as a single
+block), not a persistent REPL — see [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## Configuration
 

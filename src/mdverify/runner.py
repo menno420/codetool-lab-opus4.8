@@ -38,6 +38,8 @@ class BlockResult:
     stderr: str = ""
     duration: float = 0.0
     diff: str | None = None
+    session: str | None = None
+    block_count: int = 1
 
     @property
     def ok(self) -> bool:
@@ -57,6 +59,8 @@ class BlockResult:
             "stderr": self.stderr,
             "duration": round(self.duration, 4),
             "diff": self.diff,
+            "session": self.session,
+            "block_count": self.block_count,
         }
 
 
@@ -315,6 +319,90 @@ def _classify(
     return run_block(block, runner, timeout, expected)
 
 
+def group_sessions(blocks: list[CodeBlock]) -> dict[str, list[CodeBlock]]:
+    """Group session members by name, preserving document order.
+
+    Only blocks carrying a ``session=NAME`` directive are grouped; the result
+    maps each session name to its member blocks in the order they appear.
+    Sessions are per-file, so callers pass one file's blocks at a time.
+    """
+    sessions: dict[str, list[CodeBlock]] = {}
+    for block in blocks:
+        name = block.session
+        if name is None:
+            continue
+        sessions.setdefault(name, []).append(block)
+    return sessions
+
+
+def run_session(
+    name: str,
+    members: list[CodeBlock],
+    config: Config,
+    require_runner: bool,
+) -> BlockResult:
+    """Execute a session's members as one concatenated script and classify it.
+
+    All members must share one language. Skipped members are excluded from the
+    concatenation; if every member is skipped the session is ``SKIPPED``. The
+    session passes iff the combined run exits ``0`` -- output-block assertions
+    and ``expect-error`` do not apply to session members in v1. The single
+    result is anchored at the first member's ``file:line``.
+    """
+    anchor = members[0]
+    total = len(members)
+
+    # Distinct languages, in first-appearance order, for a clear mixed-language
+    # error message.
+    languages: list[str] = []
+    for member in members:
+        if member.language not in languages:
+            languages.append(member.language)
+    if len(languages) > 1:
+        joined = ", ".join(languages)
+        return BlockResult(
+            anchor,
+            Status.ERROR,
+            f"session {name!r} mixes languages ({joined})",
+            session=name,
+            block_count=total,
+        )
+
+    active = [member for member in members if not member.is_skipped]
+    if not active:
+        return BlockResult(
+            anchor,
+            Status.SKIPPED,
+            f"all {total} session blocks skipped by directive",
+            session=name,
+            block_count=total,
+        )
+
+    runner = config.resolve(anchor.language)
+    if runner is None:
+        if not anchor.language:
+            reason = "no language on the session's code fences"
+        else:
+            reason = f"no runner for language '{anchor.language}'"
+        status = Status.FAILED if require_runner else Status.SKIPPED
+        return BlockResult(anchor, status, reason, session=name, block_count=total)
+
+    timeout = anchor.timeout_override if anchor.timeout_override is not None else config.timeout
+    script = "\n".join(member.content for member in active)
+    synthetic = CodeBlock(
+        language=anchor.language,
+        content=script,
+        line=anchor.line,
+        source_file=anchor.source_file,
+    )
+    result = run_block(synthetic, runner, timeout)
+    result.session = name
+    result.block_count = total
+    if result.status is Status.PASSED and len(active) != total:
+        result.reason = f"ok ({len(active)} of {total} blocks ran; {total - len(active)} skipped)"
+    return result
+
+
 def run_file(
     path: str,
     config: Config,
@@ -323,18 +411,33 @@ def run_file(
     require_runner: bool = False,
     fail_fast: bool = False,
 ) -> list[BlockResult]:
-    """Parse ``path`` and run every runnable block it contains."""
+    """Parse ``path`` and run every runnable block it contains.
+
+    Blocks carrying a ``session=NAME`` directive are grouped by name and run as
+    a single concatenated script (see :func:`run_session`); the session's one
+    result is emitted at the position of its first member. All other blocks run
+    independently, exactly as before.
+    """
     text = Path(path).read_text(encoding="utf-8")
     blocks = parse_blocks(text, source_file=str(path))
     outputs = pair_outputs(blocks, config.output_languages)
+    sessions = group_sessions(blocks)
 
     results: list[BlockResult] = []
+    emitted: set[str] = set()
     for index, block in enumerate(blocks):
         if block.language in config.output_languages:
             continue
         if langs is not None and block.language not in langs:
             continue
-        result = _classify(block, config, outputs.get(index), require_runner)
+        name = block.session
+        if name is not None:
+            if name in emitted:
+                continue
+            emitted.add(name)
+            result = run_session(name, sessions[name], config, require_runner)
+        else:
+            result = _classify(block, config, outputs.get(index), require_runner)
         results.append(result)
         if fail_fast and not result.ok:
             break

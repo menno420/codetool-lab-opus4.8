@@ -92,7 +92,11 @@ def _text_report(
         if show:
             label = _LABELS[result.status]
             painted = _paint(f"{label:5}", _COLORS[result.status], color)
-            lines.append(f"  {painted} {block.location}  {block.language or '-'}")
+            suffix = ""
+            if result.session is not None:
+                noun = "block" if result.block_count == 1 else "blocks"
+                suffix = f"  (session: {result.session}, {result.block_count} {noun})"
+            lines.append(f"  {painted} {block.location}  {block.language or '-'}{suffix}")
 
         if not result.ok:
             lines.extend(_detail_lines(result, color))

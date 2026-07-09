@@ -65,6 +65,19 @@ class CodeBlock:
         return bool(self.attrs.get("run"))
 
     @property
+    def session(self) -> str | None:
+        """The session name from a ``session=NAME`` directive, or ``None``.
+
+        Members of the same session (per file) share state: their bodies are
+        concatenated in document order and run once. An empty or whitespace-only
+        value is treated as no session.
+        """
+        raw = self.attrs.get("session")
+        if isinstance(raw, str) and raw.strip():
+            return raw.strip()
+        return None
+
+    @property
     def timeout_override(self) -> float | None:
         """Per-block timeout in seconds, or ``None`` when unset/invalid."""
         raw = self.attrs.get("timeout")

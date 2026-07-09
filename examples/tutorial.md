@@ -95,5 +95,29 @@ one two three
 Each command runs in its own subprocess (state is not shared between commands),
 so chain with `&&` when a later command depends on an earlier one.
 
+## 8. Sharing state across blocks with a session
+
+Sometimes a tutorial builds up state step by step: define a value in one block,
+use it in the next. Tag related blocks with the **same** `session=NAME` and
+mdverify concatenates them in document order and runs them as **one** script, so
+later blocks see what earlier blocks defined.
+
+```python {session=demo}
+total = 0
+for n in range(1, 5):
+    total += n
+```
+
+The next block reuses `total` from the block above -- without the shared session
+this would raise `NameError`:
+
+```python {session=demo}
+assert total == 10
+print(f"the running total is {total}")
+```
+
+All members of a session must be the same language, and the session passes when
+the combined run exits `0`. See the README for the full rules and v1 limits.
+
 That's the whole tool: write docs, tag the tricky blocks, and let CI keep them
 honest.
