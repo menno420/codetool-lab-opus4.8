@@ -18,10 +18,6 @@ jobs:
           # macos-latest is arm64 and setup-python has no arm64 CPython 3.9.
           - os: macos-latest
             python-version: "3.9"
-        include:
-          # Cover 3.9 on Intel macOS instead.
-          - os: macos-13
-            python-version: "3.9"
 
     steps:
       - uses: actions/checkout@v4

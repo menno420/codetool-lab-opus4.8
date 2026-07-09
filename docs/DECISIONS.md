@@ -85,9 +85,12 @@ considered**.
   tests rely only on `python3` and `bash`, which both runners provide; `node`
   and `ruby` are deliberately not required.
 - **macOS 3.9 exception:** `macos-latest` is now arm64, and `actions/setup-python`
-  publishes no arm64 CPython 3.9 build, so that combination is **excluded** and
-  Python 3.9 is instead covered on Intel macOS via `macos-13`. `fail-fast: false`
-  keeps one leg's failure from cancelling the rest of the matrix.
+  publishes no arm64 CPython 3.9 build, so that combination is **excluded**.
+  Python 3.9 is covered on `ubuntu-latest`; macOS coverage is 3.11 and 3.13. A
+  `macos-13` (Intel) cell for 3.9 was dropped because GitHub's macOS-13 hosted
+  runners are being deprecated and fail to allocate, leaving CI perpetually
+  pending. `fail-fast: false` keeps one leg's failure from cancelling the rest of
+  the matrix.
 - **Alternatives considered:** Adding Windows (the built-in `bash`/`sh` runners
   assume a POSIX shell, so it would need conditional test skips — deferred);
   testing every minor version (slower for little added signal).
