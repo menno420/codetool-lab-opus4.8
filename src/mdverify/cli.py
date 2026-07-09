@@ -43,7 +43,12 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="PATH",
         help="files, directories, or globs to check (default: current directory)",
     )
-    parser.add_argument("-c", "--config", metavar="PATH", help="path to a .mdverify.json file")
+    parser.add_argument(
+        "-c",
+        "--config",
+        metavar="PATH",
+        help="path to a config file (.mdverify.json, or a .toml/pyproject.toml on Python 3.11+)",
+    )
     parser.add_argument(
         "--ignore",
         metavar="GLOB",

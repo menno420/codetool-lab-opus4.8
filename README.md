@@ -131,9 +131,9 @@ On a mismatch you get a unified diff:
 
 ## Configuration
 
-Configuration is optional and lives in `.mdverify.json` in the directory you run
-from (or pass an explicit path with `-c/--config`). JSON is used — not TOML — so
-mdverify works on Python 3.9, which has no `tomllib`.
+Configuration is optional. It lives in `.mdverify.json` in the directory you run
+from (or pass an explicit path with `-c/--config`). JSON is the portable default
+so mdverify works on Python 3.9, which has no `tomllib`.
 
 ```json
 {
@@ -154,6 +154,51 @@ mdverify works on Python 3.9, which has no `tomllib`.
 - **`output_languages`** — languages treated as expected-output blocks.
 - **`timeout`** — default per-block timeout in seconds.
 - **`ignore`** — glob patterns to skip during discovery.
+
+### `pyproject.toml` (Python 3.11+)
+
+On **Python 3.11 or newer** (where the standard-library `tomllib` is available)
+you can instead keep the same settings in a `[tool.mdverify]` table in
+`pyproject.toml`, so all your tool config lives in one file. The schema is
+identical to the JSON above:
+
+```toml
+[tool.mdverify]
+output_languages = ["output", "text"]
+timeout = 30
+ignore = ["**/node_modules/**", "CHANGELOG.md"]
+
+[tool.mdverify.runners.python]
+command = ["python3", "{file}"]
+ext = ".py"
+
+[tool.mdverify.runners.deno]
+command = ["deno", "run", "{file}"]
+ext = ".ts"
+aliases = ["ts"]
+```
+
+On Python 3.9/3.10 there is no `tomllib`, so `pyproject.toml` config is silently
+ignored and `.mdverify.json` remains the portable default (the runtime stays
+zero-dependency — no TOML library is ever installed).
+
+### Config source precedence
+
+Exactly **one** source is used — whichever is found first. Sources are **not**
+merged with one another (only over the built-in defaults), keeping resolution
+simple and predictable:
+
+1. `-c/--config PATH` — an explicit file. The extension decides the parser:
+   `.json` → JSON, `.toml` → `tomllib` (a `pyproject.toml` reads its
+   `[tool.mdverify]` table). Pointing `--config` at a `.toml` file on Python
+   3.9/3.10 is an error, since `tomllib` is unavailable there.
+2. `./.mdverify.json` in the current directory.
+3. `./pyproject.toml`'s `[tool.mdverify]` table (Python 3.11+ only, and only
+   when that table is present).
+4. The built-in defaults.
+
+If both `.mdverify.json` and a `pyproject.toml [tool.mdverify]` table exist, the
+JSON file wins.
 
 ### Built-in runners
 
@@ -179,7 +224,7 @@ into failures.
 | Option                         | Description                                                 |
 | ------------------------------ | ----------------------------------------------------------- |
 | `PATH...`                      | Files, directories, or globs (default: current directory).  |
-| `-c, --config PATH`            | Path to a `.mdverify.json` config file.                     |
+| `-c, --config PATH`            | Path to a config file (`.mdverify.json`, or `.toml` on 3.11+). |
 | `--ignore GLOB`                | Ignore matching paths (repeatable).                         |
 | `--lang LANG`                  | Only run blocks in this language (repeatable).              |
 | `--timeout SECONDS`            | Per-block timeout (default: 30).                            |

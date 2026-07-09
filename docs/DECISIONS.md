@@ -26,16 +26,28 @@ considered**.
   ambiguous (`mdcheck` reads like a linter), or misleading (`mdrun` implies it
   runs the whole document as a program).
 
-## 3. JSON config, not TOML
+## 3. JSON config, with `pyproject.toml` as a 3.11+ opt-in
 
-- **Decision:** Configuration is `.mdverify.json`, parsed with `json`.
+- **Decision:** `.mdverify.json` (parsed with `json`) is the portable default
+  config. Additionally, on Python 3.11+, a `[tool.mdverify]` table in
+  `pyproject.toml` is accepted, parsed with the standard-library `tomllib`.
 - **Why:** The support floor is Python 3.9, which has no `tomllib` (added in
-  3.11). Using TOML would force either a 3.11 floor or a `tomli` dependency —
-  the latter breaks decision #1. `json` is always available and adequate for the
-  small schema.
-- **Alternatives considered:** TOML via `tomllib`/`tomli`; `pyproject.toml`
-  `[tool.mdverify]`. Deferred to a future opt-in on 3.11+ (see the changelog
-  roadmap), keeping JSON as the portable default.
+  3.11). Making TOML the *only* format would force either a 3.11 floor or a
+  `tomli` dependency — the latter breaks decision #1. So `json` remains the
+  always-available default, adequate for the small schema and working on 3.9+.
+  The `pyproject.toml` support is a pure convenience layered on top: it reuses
+  the exact same schema and validation path (parse TOML → same dict → same
+  validator), needs no third-party dependency (`tomllib` is stdlib on 3.11+),
+  and is **silently skipped** on 3.9/3.10 where `tomllib` is absent — so the
+  original rationale (3.9 support without a dependency) still holds fully.
+- **Precedence (updated):** exactly one source is used and sources are never
+  merged: `--config` file → `./.mdverify.json` → `./pyproject.toml
+  [tool.mdverify]` (3.11+ only) → built-in defaults. If both a JSON file and a
+  pyproject table exist, the JSON file wins.
+- **Alternatives considered:** Making TOML the sole format (breaks 3.9 or the
+  zero-dependency rule); a `tomli` backport dependency for 3.9/3.10 (rejected —
+  decision #1); merging across sources (rejected — less predictable than
+  first-source-wins).
 
 ## 4. Independent-block execution model (v0.1.0)
 

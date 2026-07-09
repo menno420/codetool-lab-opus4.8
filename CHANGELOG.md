@@ -12,6 +12,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   mdverify, with `paths`, `args`, and `python-version` inputs.
 - **pre-commit hook** (`.pre-commit-hooks.yaml`, `id: mdverify`) that runs the
   code blocks in changed Markdown files, for easy CI/pre-commit adoption.
+- **`[tool.mdverify]` in `pyproject.toml`** as an additional config source on
+  Python 3.11+ (read with the standard-library `tomllib`), using the same schema
+  as `.mdverify.json`. `.mdverify.json` remains the portable default; on Python
+  3.9/3.10 pyproject config is silently skipped and no TOML dependency is added.
 
 Roadmap / ideas under consideration:
 
@@ -19,8 +23,6 @@ Roadmap / ideas under consideration:
   can build on variables defined earlier.
 - **`console`-style shell assertions**: `$`-prefixed commands with inline
   expected output in a single block.
-- **`[tool.mdverify]` in `pyproject.toml`** as an alternative config source on
-  Python 3.11+ (via `tomllib`), keeping JSON as the portable default.
 
 ## [0.1.0] - 2026-07-09
 
