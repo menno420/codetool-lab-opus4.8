@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-09
+
 ### Added
 
 - Reusable composite **GitHub Action** (`action.yml`) that installs and runs
@@ -55,5 +57,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - CI-friendly exit codes (0 pass, 1 failure, 2 usage/config error).
 - Zero runtime dependencies — standard library only, Python 3.9+.
 
-[Unreleased]: https://github.com/menno420/codetool-lab-opus4.8/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/menno420/codetool-lab-opus4.8/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/menno420/codetool-lab-opus4.8/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/menno420/codetool-lab-opus4.8/releases/tag/v0.1.0
