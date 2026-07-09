@@ -34,12 +34,13 @@ transcripts), with **zero runtime dependencies** — pure standard library.
 this repository with [pipx](https://pipx.pypa.io) (recommended — isolated) or pip:
 
 ```console
-$ pipx install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.1.0"
+$ pipx install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.2.0"
 # or
-$ pip install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.1.0"
+$ pip install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.2.0"
 ```
 
-To track the latest development version instead, swap `@v0.1.0` for `@main`.
+Pinning to a released tag (`@v0.2.0`) is recommended; use `@main` for the latest
+unreleased development version instead — just swap `@v0.2.0` for `@main`.
 
 From source (for development):
 
@@ -347,7 +348,7 @@ Add a step to your workflow so broken examples fail the build:
 ```yaml
 - name: Verify documentation
   run: |
-    pip install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.1.0"
+    pip install "git+https://github.com/menno420/codetool-lab-opus4.8@v0.2.0"
     mdverify README.md docs/
 ```
 
@@ -362,7 +363,7 @@ at the repo and pass the paths you want checked:
 
 ```yaml
 # .github/workflows/docs.yml
-- uses: menno420/codetool-lab-opus4.8@v0.1.0   # or @main for latest
+- uses: menno420/codetool-lab-opus4.8@v0.2.0   # or @main for latest unreleased
   with:
     paths: "README.md docs/"
 ```
@@ -378,7 +379,7 @@ Run mdverify on changed Markdown before every commit via
 ```yaml
 # .pre-commit-config.yaml
 - repo: https://github.com/menno420/codetool-lab-opus4.8
-  rev: main    # pin to a tag once released
+  rev: v0.2.0    # pinned release; use `rev: main` for the latest unreleased
   hooks:
     - id: mdverify
 ```
