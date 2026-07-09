@@ -88,6 +88,7 @@ brace-wrapped forms work:
 | `skip` / `no-run`   | Record the block but never execute it (reported as `SKIP`).         |
 | `expect-error`      | The block **must** exit non-zero; it passes on failure, fails on 0. |
 | `timeout=<seconds>` | Override the per-block timeout.                                      |
+| `run` / `exec`      | **Console-session blocks only:** execute the `$`-prefixed transcript (see below). Ignored on other languages. |
 
 A block marked `expect-error` is judged purely on its (non-zero) exit code: any
 following `output` block is **not** compared, since a block that is expected to
@@ -129,6 +130,44 @@ On a mismatch you get a unified diff:
        2
 ```
 
+### Console-session shell assertions
+
+A block whose language is a **console-session** language (`console`,
+`shell-session`, `shellsession`, `sh-session`) transcribes an interactive shell
+session. By default such a block is **illustrative** and simply skipped — so
+plain install snippets like
+
+    ```console
+    $ pipx install mytool
+    ```
+
+never execute. It runs as a set of assertions **only** when you opt in with the
+`run` (alias `exec`) directive:
+
+    ```console {run}
+    $ echo hello
+    hello
+    $ echo one two three
+    one two three
+    ```
+
+Inside a `run` console block:
+
+- A line starting with `$ ` is a **command**; the lines after it (until the next
+  `$ ` command or the end of the block) are that command's **expected stdout**.
+- A line starting with `> ` **continues** the previous command (for shell
+  backslash-continuations), joined to it with a newline.
+- Each command runs via `console_shell` (default `bash -c`). A command **passes**
+  when it exits `0` **and** its stdout matches the expected lines (using the same
+  whitespace normalisation as `output` assertions). On a non-zero exit the block
+  fails with the command's stderr; on a mismatch it fails with a unified diff.
+  The block passes only when **every** command passes.
+
+Each command runs in its **own** subprocess, so state is **not** shared between
+commands within a block — chain dependent steps with `&&`, or wait for the
+forthcoming session-sharing feature. The `run` directive is meaningful only for
+console-session languages; on any other language it is recognised but ignored.
+
 ## Configuration
 
 Configuration is optional. It lives in `.mdverify.json` in the directory you run
@@ -143,7 +182,9 @@ so mdverify works on Python 3.9, which has no `tomllib`.
   },
   "output_languages": ["output", "text"],
   "timeout": 30,
-  "ignore": ["**/node_modules/**", "CHANGELOG.md"]
+  "ignore": ["**/node_modules/**", "CHANGELOG.md"],
+  "console_languages": ["console", "shell-session"],
+  "console_shell": ["bash", "-c"]
 }
 ```
 
@@ -154,6 +195,11 @@ so mdverify works on Python 3.9, which has no `tomllib`.
 - **`output_languages`** — languages treated as expected-output blocks.
 - **`timeout`** — default per-block timeout in seconds.
 - **`ignore`** — glob patterns to skip during discovery.
+- **`console_languages`** — languages treated as console-session transcripts
+  (default `console`, `shell-session`, `shellsession`, `sh-session`). These are
+  skipped unless the block also carries the `run` directive.
+- **`console_shell`** — argv prefix used to run each console command; the command
+  text is appended as the final argument (default `["bash", "-c"]`).
 
 ### `pyproject.toml` (Python 3.11+)
 
@@ -167,6 +213,8 @@ identical to the JSON above:
 output_languages = ["output", "text"]
 timeout = 30
 ignore = ["**/node_modules/**", "CHANGELOG.md"]
+console_languages = ["console", "shell-session"]
+console_shell = ["bash", "-c"]
 
 [tool.mdverify.runners.python]
 command = ["python3", "{file}"]

@@ -16,13 +16,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Python 3.11+ (read with the standard-library `tomllib`), using the same schema
   as `.mdverify.json`. `.mdverify.json` remains the portable default; on Python
   3.9/3.10 pyproject config is silently skipped and no TOML dependency is added.
+- **Opt-in `console`-style shell assertions.** A console-session block
+  (`console`, `shell-session`, `shellsession`, `sh-session`) marked with the new
+  `run` (alias `exec`) directive is executed as `$`-prefixed shell assertions:
+  each `$ ` command runs (a `> ` line continues a multi-line command) and its
+  stdout is checked against the following lines, failing on a non-zero exit or an
+  output mismatch (unified diff). Console blocks **without** `run` remain
+  illustrative and skipped, so existing snippets never execute. Commands run in
+  independent subprocesses (state is not shared). Adds `console_languages` and
+  `console_shell` config keys (JSON and `pyproject.toml`).
 
 Roadmap / ideas under consideration:
 
 - **Session state-sharing** between blocks in a file (opt-in), so a later block
   can build on variables defined earlier.
-- **`console`-style shell assertions**: `$`-prefixed commands with inline
-  expected output in a single block.
 
 ## [0.1.0] - 2026-07-09
 

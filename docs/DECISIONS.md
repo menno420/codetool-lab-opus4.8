@@ -88,7 +88,33 @@ considered**.
   (language-specific, clutters the code); doctest-style interleaved transcripts
   (not copy-pasteable, Python-flavoured).
 
-## 7. CI matrix: 2 OS × 3 Python versions
+## 7. Console-session assertions are opt-in via a `run` directive
+
+- **Decision:** A console-session block (`console`, `shell-session`, ...) is
+  treated exactly as before — illustrative and **skipped** — unless it also
+  carries a `run` (alias `exec`) directive, in which case it is executed as
+  `$`-prefixed shell assertions. Each `$ ` command runs in its **own**
+  subprocess (state is not shared across commands within a block).
+- **Why:** ` ```console ` fences are overwhelmingly used for *illustrative*
+  transcripts — install snippets (`$ pipx install ...`), REPL sessions, output
+  no one intends to re-run. Auto-executing every console block would run this
+  repo's own README install commands and break countless existing docs, making
+  the feature impossible to adopt. Gating execution behind an explicit `run`
+  opt-in preserves 100% backward compatibility (`mdverify README.md` stays
+  green) while giving authors a way to *assert* on a session when they mean to.
+  Per-command independent execution mirrors decision #4 (the independent-block
+  model): it is simple, predictable, and language-agnostic. Shared state across
+  commands needs a persistent shell session, which is a separate, more complex
+  feature (tracked as a roadmap item); authors who need it today chain commands
+  with `&&`.
+- **Alternatives considered:** Auto-running all console blocks (rejected —
+  breaks illustrative snippets and backward compat); a separate `console-run`
+  language instead of a directive (rejected — a directive composes with the
+  existing `skip`/`timeout` machinery and keeps the language token honest to what
+  renderers highlight); sharing a shell process across commands in a block
+  (deferred to the session-sharing feature — see decision #4).
+
+## 8. CI matrix: 2 OS × 3 Python versions
 
 - **Decision:** Test on `ubuntu-latest` and `macos-latest` across Python 3.9,
   3.11, and 3.13.
@@ -107,7 +133,7 @@ considered**.
   assume a POSIX shell, so it would need conditional test skips — deferred);
   testing every minor version (slower for little added signal).
 
-## 8. Publishing via GitHub Release + git install
+## 9. Publishing via GitHub Release + git install
 
 - **Decision:** Distribute from the Git repository (`pip`/`pipx install
   "git+https://…@v0.1.0"`) rather than PyPI for v0.1.0.
