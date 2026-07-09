@@ -1,0 +1,8 @@
+- id: mdverify
+  name: mdverify (verify Markdown code blocks)
+  description: Run the code blocks in your Markdown docs and fail if any break.
+  entry: mdverify
+  language: python
+  types: [markdown]
+  pass_filenames: true
+  require_serial: true

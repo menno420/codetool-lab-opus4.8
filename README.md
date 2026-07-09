@@ -212,6 +212,38 @@ Add a step to your workflow so broken examples fail the build:
     mdverify README.md docs/
 ```
 
+## Use it in CI & pre-commit
+
+Two drop-in integrations let you adopt mdverify in a few lines.
+
+### GitHub Action
+
+A reusable composite Action installs mdverify and runs it for you. Point `uses`
+at the repo and pass the paths you want checked:
+
+```yaml
+# .github/workflows/docs.yml
+- uses: menno420/codetool-lab-opus4.8@main   # pin @v0.1.0 once tagged
+  with:
+    paths: "README.md docs/"
+```
+
+Inputs: `paths` (files/dirs to check, default `.`), `args` (extra CLI flags,
+e.g. `--format json --fail-fast`), and `python-version` (default `3.x`).
+
+### pre-commit hook
+
+Run mdverify on changed Markdown before every commit via
+[pre-commit](https://pre-commit.com):
+
+```yaml
+# .pre-commit-config.yaml
+- repo: https://github.com/menno420/codetool-lab-opus4.8
+  rev: main    # pin to a tag once released
+  hooks:
+    - id: mdverify
+```
+
 ## How it compares
 
 - **`doctest`** is Python-only and REPL-transcript-shaped (`>>>` prompts).
